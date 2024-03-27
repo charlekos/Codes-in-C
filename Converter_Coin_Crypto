@@ -1,0 +1,42 @@
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+
+class ConversorDeMoedas
+{
+    static async Task Main(string[] args)
+    {
+        Console.WriteLine("Digite o valor a ser convertido:");
+        double valor = Convert.ToDouble(Console.ReadLine());
+
+        Console.WriteLine("Digite a moeda de origem:");
+        string moedaOrigem = Console.ReadLine().ToUpper();
+
+        Console.WriteLine("Digite a moeda de destino:");
+        string moedaDestino = Console.ReadLine().ToUpper();
+
+        double taxaDeCambio = await ObterTaxaDeCambio(moedaOrigem, moedaDestino);
+        double valorConvertido = valor * taxaDeCambio;
+
+        Console.WriteLine($"Valor convertido: {valorConvertido} {moedaDestino}");
+    }
+
+    static async Task<double> ObterTaxaDeCambio(string moedaOrigem, string moedaDestino)
+    {
+        using (var httpClient = new HttpClient())
+        {
+            string url = $"https://api.coingecko.com/api/v3/simple/price?ids={moedaOrigem}&vs_currencies={moedaDestino}";
+            HttpResponseMessage response = await httpClient.GetAsync(url);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var data = await response.Content.ReadAsAsync<dynamic>();
+                return data[moedaOrigem][moedaDestino];
+            }
+            else
+            {
+                throw new Exception("Erro ao obter taxa de câmbio.");
+            }
+        }
+    }
+}
